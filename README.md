@@ -39,7 +39,7 @@ Run the following commands in your project directory to automate the setup:
 !curl -L -o /data/cat-and-dog.zip\
 https://www.kaggle.com/api/v1/datasets/download/tongpython/cat-and-dog
 
-!unzip -q /data/cat-and-dog.zip -d /content/data
+!unzip -q /data/cat-and-dog.zip -d /data
 
 !rm -rf /data/cat-and-dog.zip
 ```
