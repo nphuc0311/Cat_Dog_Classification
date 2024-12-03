@@ -36,12 +36,12 @@ Run the following commands in your project directory to automate the setup:
 ```bash
 !mkdir data
 
-!curl -L -o /content/data/cat-and-dog.zip\
+!curl -L -o /data/cat-and-dog.zip\
 https://www.kaggle.com/api/v1/datasets/download/tongpython/cat-and-dog
 
-!unzip -q /content/data/cat-and-dog.zip -d /content/data
+!unzip -q /data/cat-and-dog.zip -d /content/data
 
-!rm -rf /content/data/cat-and-dog.zip
+!rm -rf /data/cat-and-dog.zip
 ```
 # Usage
 Once the data is prepared, you can train the model using the following command:
