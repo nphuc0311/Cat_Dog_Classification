@@ -11,7 +11,7 @@ from torchsummary import summary
 
 from lib.defaults import Args
 from lib.dataset.dataset import CatDogDataset
-from lib.models.cnn import SimpleCNN
+from lib.models.resnet50 import ResNet50Classifier
 from evaluate import evaluate
 
 
@@ -35,12 +35,12 @@ def train(model, train_loader, test_loader, criterion, optimizer, num_epochs=5, 
     # Initialize lists to store the loss and accuracy values
     results = {"train_loss": [],
             "train_acc": [],
-            "test_loss": [],
-            "test_acc": []
+            "val_loss": [],
+            "val_acc": []
         }
 
     # Initialize variables to keep track of best test loss
-    best_test_loss = float('inf')
+    best_loss = float('inf')
     last_model_path = os.path.join(save_path, "last.pt")
     best_model_path = os.path.join(save_path, "best.pt")
 
@@ -79,18 +79,18 @@ def train(model, train_loader, test_loader, criterion, optimizer, num_epochs=5, 
         avg_loss = running_loss / len(train_loader)
 
         # Evaluate on the test set
-        test_loss, test_accuracy = evaluate(model, test_loader, criterion)
+        val_loss, val_accuracy = evaluate(model, val_loader, criterion)
 
-        print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}, Accuracy: {correct / total * 100:.2f}%, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}%\n")
+        print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}, Accuracy: {correct / total * 100:.2f}%, Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.2f}%\n")
 
         results["train_loss"].append(avg_loss)
         results["train_acc"].append(correct / total * 100)
-        results["test_loss"].append(test_loss)
-        results["test_acc"].append(test_accuracy)
+        results["val_loss"].append(val_loss)
+        results["val_acc"].append(val_accuracy)
 
         # Save the model if it is the best so far
-        if test_loss < best_test_loss:
-            best_test_loss = test_loss
+        if avg_loss < best_loss:
+            best_loss = val_loss
             torch.save(model.state_dict(), best_model_path)
             epochs_without_improvement = 0
         else:
@@ -101,7 +101,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, num_epochs=5, 
 
         if epochs_without_improvement >= max_num_trials:
             print(f"Early stopping triggered after {epoch+1} epochs without improvement.")
-            break
+            return results
 
     return results
 
@@ -114,7 +114,7 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
-    model = SimpleCNN(num_classes=2, dropout=args.dropout).to(device)
+    model = ResNet50Classifier().to(device)
     summary(model, input_size=(3, 224, 224))
 
     criterion = nn.CrossEntropyLoss()

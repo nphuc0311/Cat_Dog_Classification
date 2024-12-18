@@ -1,10 +1,11 @@
 import streamlit as st
 import torch
+import torch.nn as nn
 
 from torchvision import transforms
 from PIL import Image
 
-from lib.models.cnn import SimpleCNN
+from lib.models.resnet50 import ResNet50Classifier
 from lib.defaults import Args
 
 transform = transforms.Compose([
@@ -24,7 +25,9 @@ def predict(model, image):
 
     outputs = model(image_tensor)
 
+
     _, predicted = torch.max(outputs.data, 1)
+    print(torch.softmax(outputs.data, dim=1))
 
     if predicted.item() == 1:
         return "Cat"
@@ -33,8 +36,8 @@ def predict(model, image):
 
     
 if __name__ == "__main__":
-    model = SimpleCNN(num_classes=2, dropout=args.dropout).to(device)
-    model.load_state_dict(torch.load("./weights/best.pt", weights_only=True, map_location=torch.device('cpu')))
+    model = ResNet50Classifier().to(device)
+    model.load_state_dict(torch.load("./weights/last.pt", weights_only=True, map_location=torch.device('cpu')))
 
     # Streamlit UI
     st.title("Cat or Dog Image Classification")
