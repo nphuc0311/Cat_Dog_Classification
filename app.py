@@ -24,10 +24,7 @@ def predict(model, image):
     image_tensor = image_tensor.to(device)
 
     outputs = model(image_tensor)
-
-
-    _, predicted = torch.max(outputs.data, 1)
-    print(torch.softmax(outputs.data, dim=1))
+    predicted = torch.sigmoid(outputs) > 0.5
 
     if predicted.item() == 1:
         return "Cat"
@@ -37,7 +34,7 @@ def predict(model, image):
     
 if __name__ == "__main__":
     model = ResNet50Classifier().to(device)
-    model.load_state_dict(torch.load("./weights/last.pt", weights_only=True, map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load("./weights/best.pt", weights_only=True, map_location=torch.device('cpu')))
 
     # Streamlit UI
     st.title("Cat or Dog Image Classification")

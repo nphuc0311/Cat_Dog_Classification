@@ -31,12 +31,13 @@ def evaluate(model, val_loader, criterion):
         for images, labels in val_loader:
             images = images.to(device)
             labels = labels.to(device)
+            labels = labels.view(len(labels), 1)
 
             outputs = model(images)
             loss = criterion(outputs, labels)
             running_val_loss += loss.item()
 
-            _, predicted = torch.max(outputs.data, 1)
+            predicted = torch.sigmoid(outputs) > 0.5
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
@@ -49,10 +50,25 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
     
     model = ResNet50Classifier().to(device)
-    model.load_state_dict(torch.load("weights/last.pt", weights_only=True, map_location="cpu"))
+    model.load_state_dict(torch.load("weights/best.pt", weights_only=True, map_location="cpu"))
     
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
 
-    test_loss, test_accuracy = evaluate(model, test_loader, criterion)
+    # test_loss, test_accuracy = evaluate(model, test_loader, criterion)
+    correct = 0
+    total = 0
+    model.eval()
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images = images.to(device)
+            labels = labels.to(device)
+            labels = labels.view(len(labels), 1)
 
-    print(f"Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.2f}%")
+            outputs = model(images)
+
+            predicted = torch.sigmoid(outputs) > 0.5
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+            break
+
+    print(f"Test Accuracy: {correct / total * 100:.2f}%")

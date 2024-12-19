@@ -29,7 +29,7 @@ torch.manual_seed(args.seed)
 torch.cuda.manual_seed(args.seed)
 
 
-def train(model, train_loader, test_loader, criterion, optimizer, num_epochs=5, save_path=None, max_num_trials=3):
+def train(model, train_loader, val_loader, criterion, optimizer, num_epochs=5, save_path=None, max_num_trials=3):
     model.train()
 
     # Initialize lists to store the loss and accuracy values
@@ -56,6 +56,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, num_epochs=5, 
             for images, labels in train_bar:
                 images = images.to(device)
                 labels = labels.to(device)
+                labels = labels.view(len(labels), 1)
 
                 optimizer.zero_grad()
 
@@ -69,7 +70,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, num_epochs=5, 
 
                 # Track the loss and accuracy
                 running_loss += loss.item()
-                _, predicted = torch.max(outputs.data, 1)
+                predicted = torch.sigmoid(outputs) > 0.5
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
 
@@ -117,7 +118,7 @@ def main():
     model = ResNet50Classifier().to(device)
     summary(model, input_size=(3, 224, 224))
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     results = train(model, train_loader, test_loader, criterion, optimizer, num_epochs=args.num_epochs, save_path=args.save_path, max_num_trials=args.max_num_trials)
